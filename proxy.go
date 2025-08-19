@@ -20,7 +20,8 @@ import (
 )
 
 const (
-	fname   = "/app/config/setup.toml"
+	// fname = "/app/config/setup.toml"
+	fname   = "config/setup.toml" // для тестов
 	reghtml = 301
 )
 
@@ -471,7 +472,7 @@ func process_connection(local net.Conn, conn_n int64) {
 
 }
 func run_proxy() {
-	list := fmt.Sprintf(":%d", tconfig.Localport)
+	list := fmt.Sprintf(":%d", tconfig.LocalPort)
 	// слушаем порт
 	ln, err := net.Listen("tcp", list)
 	if err != nil {
@@ -528,7 +529,7 @@ func main() {
 
 	http.Handle("/", router)
 	portControl := fmt.Sprintf(":%d", tconfig.PortControl)
-	fmt.Printf("Server is listening %s", portControl)
+	fmt.Printf("Server is listening %s\n", portControl)
 
 	http.ListenAndServe(portControl, nil)
 }

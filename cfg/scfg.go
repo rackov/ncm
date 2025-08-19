@@ -26,7 +26,7 @@ type SqlServer struct {
 
 type TomlConfig struct {
 	Title       string
-	Localport   int
+	LocalPort   int
 	Index_head  int
 	Sql_active  bool
 	Sql_param   SqlServer
