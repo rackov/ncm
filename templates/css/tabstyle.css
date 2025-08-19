@@ -1,0 +1,23 @@
+TABLE {
+    /* width: 300px;  Ширина таблицы */
+     border: 2px solid black; /* Рамка вокруг таблицы */
+     background: #778899; /* Цвет фона */
+     color: white; /* Цвет текста */
+    }
+    TD, TH {
+     text-align: center; /* Выравнивание по центру */
+     padding: 3px; /* Поля вокруг текста */
+    }
+    TH {
+     color: white; /* Цвет текста */
+     border-bottom: 4px double black; /* Двойная линия снизу */
+     cursor: pointer;
+    }
+    .even { /* Стиль для четных колонок */
+     background: #ffe4b5; /* Цвет фона */
+     color: black; /* Цвет текста */
+    }
+    .lc { /* Стиль для первой колонки */
+     text-align: left; /* Выравнивание по левому краю */
+     color: #fffacd; /* Цвет текста */
+    }

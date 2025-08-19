@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Edt Product</title>
+        <link rel="stylesheet" href="../templates/css/ndstyle.css">
+        <!-- Подключаем javascript-библиотеку функций -->
+        <script type="text/javascript" src="../templates/js/ndedit.js"></script>
+    </head>
+    <body>
+        <h3>    Сформировать </h3>
+        <form action="#" method="POST">
+            <input type="hidden" name="id" value="{{.Id}}" />
+            <label>Номер БНСТ   "{{.Id_bnst}}" </label><br>
+
+            <label>Сервис</label><br>
+            <select id="select-1">
+                         <option value="0">Команды </option>
+                         <option value="5">Сообщения</option>
+            </select>
+
+            <label>Тип команды</label><br>
+        <select id="select-2">
+          <option class="0" value="1">NPH_PRIA</option>
+          <option class="0" value="2">NPH_PRNAV</option>
+
+          <option class="5" value="3">Dialog</option>
+          <option class="5" value="4">Backend</option>
+        </select>
+        
+        <select id="select-3">
+          <option class="1" value="170">SET_PRIA</option>
+          <option class="1" value="171">GET_PRIA</option>
+          <option class="2" value="175">NPH_SET_PRNAV</option>
+          <option class="2" value="176">NPH_GET_PRNAV</option>
+        
+          <option class="3" value="100">Send</option>
+          <option class="4" value="100">Send</option>
+        </select>            
+
+        <br><label>Содержание команды</label><br>
+            <input type="text" name="comstr" value="{{.Comstr}}" /><br><br>
+            <textarea autocomplete="off"  name="question"></textarea><br>
+
+            <input type="submit" value="Send" />
+        </form>
+    </body>
+</html>
+

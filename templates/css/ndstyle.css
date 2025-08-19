@@ -1,0 +1,10 @@
+form {
+    padding-top: 10px;
+    padding-left: 50px;
+ /*   display: flex;
+    background-color: antiquewhite; */
+    justify-content: center; 
+  }
+  select {
+    margin:5px;
+  }

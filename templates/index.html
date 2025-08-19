@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>BNST</title>
+        <link rel="stylesheet" href="../templates/css/tabstyle.css">  
+        <script type="text/javascript" src="../templates/js/mtable.js"></script>
+    </head>
+    <body>
+        
+        <h2>Список подключений</h2>
+        <p>{{.Countb}} </p>
+        <input type="text" id="myInput" onkeyup="myFilter()" placeholder="Search for bnst.." title="Type in number">
+        <table cellspacing="0" id="myTable">
+            <thead class="lc">
+                <th onclick="sortTable(0)">Id session</th>
+                <th onclick="sortTable(1)">Id_bnst </th>
+                <th onclick="sortTable(2)">TimeOpen</th>
+                <th>AddrIn</th><th>AddrOut</th>
+                <th>Dis</th>
+                <th><input type="checkbox" onclick="toggle(this);"></th>
+            </thead>
+            {{range .Listcon }}
+            <tr>
+                <td class="lc">{{.Id}}</td>
+                <td class="even">{{.Id_bnst}}</td>
+                <td>{{.TimeOpen}}</td>
+                <td class="even">{{.AddrIn}}</td>
+                <td>{{.AddrOut}}</td>
+                <td class="even"><a href="/edit/{{.Id}}"> Set</a> | 
+                    <a href="/del/{{.Id}}">Прервать</a>
+                </td>
+                <td><input type="checkbox" name="select"></td>
+            </tr>
+            {{end}}
+        </table>
+    
+    </body>
+</html>
