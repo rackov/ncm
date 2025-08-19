@@ -1,15 +1,5 @@
 #!/bin/bash
 
-# Функция для проверки доступности порта
-check_port() {
-    local port=$1
-    if netstat -tuln | grep -q ":$port "; then
-        echo "Порт $port уже занят. Пожалуйста, выберите другой порт."
-        return 1
-    fi
-    return 0
-}
-
 # Проверяем наличие файла конфигурации
 if [ ! -f ./config/setup.toml ]; then
     echo "Файл конфигурации не найден. Создаем пример конфигурации..."
@@ -57,17 +47,6 @@ fi
 
 echo "Используются порты: прокси = $LOCAL_PORT, управление = $CONTROL_PORT"
 
-# Проверяем доступность портов
-if ! check_port $LOCAL_PORT; then
-    echo "Порт прокси ($LOCAL_PORT) уже занят. Пожалуйста, измените его в файле конфигурации."
-    exit 1
-fi
-
-if ! check_port $CONTROL_PORT; then
-    echo "Порт управления ($CONTROL_PORT) уже занят. Пожалуйста, измените его в файле конфигурации."
-    exit 1
-fi
-
 # Проверяем, существует ли контейнер с таким именем, и останавливаем/удаляем его
 if docker ps -a --format '{{.Names}}' | grep -q "^proxy-container$"; then
     echo "Останавливаем и удаляем существующий контейнер proxy-container..."
@@ -75,22 +54,59 @@ if docker ps -a --format '{{.Names}}' | grep -q "^proxy-container$"; then
     docker rm proxy-container
 fi
 
-# Удаляем старый контейнер и образ, если они существуют
-docker rmi proxy-app 2>/dev/null || true
+# Проверяем, существует ли образ, и удаляем его перед пересборкой
+if docker images --format '{{.Repository}}:{{.Tag}}' | grep -q "^proxy-app:latest$"; then
+    echo "Удаляем существующий образ proxy-app:latest..."
+    docker rmi proxy-app:latest
+fi
 
-# Пересобираем образ с правильной структурой
+# Пересобираем образ
+echo "Собираем Docker-образ..."
 docker build -t proxy-app .
 
-# Запускаем контейнер с монтированием папки templates
-# Удалите эту строку из скрипта запуска, если не хотите монтировать папку templates
-#   -v $(pwd)/templates:/app/templates \
+# Проверяем, что образ успешно собран
+if ! docker images --format '{{.Repository}}:{{.Tag}}' | grep -q "^proxy-app:latest$"; then
+    echo "Ошибка при сборке Docker-образа. Пожалуйста, проверьте вывод выше."
+    exit 1
+fi
 
-docker run -d \
+# Запускаем контейнер с пробросом всех портов на хост-систему
+echo "Запускаем контейнер..."
+CONTAINER_ID=$(docker run -d \
   --name proxy-container \
-  -p $LOCAL_PORT:$LOCAL_PORT \
-  -p $CONTROL_PORT:$CONTROL_PORT \
+  --network host \
   -v $(pwd)/logs:/app/logs \
   -v $(pwd)/config/setup.toml:/app/config/setup.toml \
-  proxy-app
+  -v $(pwd)/templates:/app/templates \
+  proxy-app)
 
-echo "Контейнер запущен."
+# Проверяем, что контейнер успешно запущен
+if [ -z "$CONTAINER_ID" ]; then
+    echo "Ошибка при запуске контейнера. Пожалуйста, проверьте вывод выше."
+    exit 1
+fi
+
+# Получаем информацию о контейнере
+echo "Контейнер запущен с ID: $CONTAINER_ID"
+echo "Приложение использует порты из файла конфигурации: прокси = $LOCAL_PORT, управление = $CONTROL_PORT"
+
+# Создаем скрипт для перезапуска контейнера
+cat > restart-proxy.sh << 'EOF'
+#!/bin/bash
+
+# Останавливаем контейнер
+echo "Останавливаем контейнер..."
+docker stop proxy-container
+
+# Запускаем контейнер
+echo "Запускаем контейнер..."
+docker start proxy-container
+
+echo "Контейнер перезапущен. Приложение использует порты из файла конфигурации."
+EOF
+
+# Делаем скрипт перезапуска исполняемым
+chmod +x restart-proxy.sh
+
+echo "Для перезапуска контейнера после изменения файла конфигурации используйте скрипт ./restart-proxy.sh"
+echo "Приложение будет использовать порты, указанные в файле ./config/setup.toml"

@@ -22,7 +22,7 @@ FROM alpine:latest
 # Установка ca-certificates для HTTPS
 RUN apk --no-cache add ca-certificates
 
-# Создание директорий для логов и конфигурации
+# Создание директорий для логов, конфигурации и шаблонов
 RUN mkdir -p /app/logs /app/config /app/templates
 
 # Создание примера файла конфигурации
@@ -37,8 +37,8 @@ COPY --from=builder /app/proxy .
 # Копирование папки templates
 COPY --from=builder /app/templates ./templates
 
-# Создание томов для логов и конфигурации
-VOLUME ["/app/logs", "/app/config"]
+# Создание томов для логов, конфигурации и шаблонов
+VOLUME ["/app/logs", "/app/config", "/app/templates"]
 
 # Запуск приложения
 CMD ["./proxy"]

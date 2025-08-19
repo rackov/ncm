@@ -20,8 +20,8 @@ import (
 )
 
 const (
-	// fname = "/app/config/setup.toml"
-	fname   = "config/setup.toml" // для тестов
+	fname = "/app/config/setup.toml"
+	// fname   = "config/setup.toml" // для тестов
 	reghtml = 301
 )
 
