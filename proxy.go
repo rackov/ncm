@@ -1,18 +1,14 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"ncm/cfg"
 	"net"
 	"net/http"
 	"os"
-	"project/Ndtp_ext/config"
-	"project/Ndtp_ext/ndtp"
-	"project/Ndtp_ext/storage"
 	"runtime"
 	"sort"
 	"strconv"
@@ -24,11 +20,11 @@ import (
 )
 
 const (
-	fname   = "setup.toml"
+	fname   = "/app/config/setup.toml"
 	reghtml = 301
 )
 
-var tconfig config.TomlConfig
+var tconfig cfg.TomlConfig
 
 var writeData = make(chan string) // канал записи
 
@@ -56,7 +52,7 @@ func connection_logger(data chan []byte, conn_n int64, local_info, remote_info s
 // принимает сообщения. Каждое сообщение - это кусок данных для помещения
 // в лог. Если пришли пустые данные - выходим.
 func logger_loop(data chan []byte, log_name string) {
-	f, err := os.Create(".//log//" + log_name)
+	f, err := os.Create(".//logs//" + log_name)
 	if err != nil {
 		die("Unable to create file %s, %v\n", log_name, err)
 	}
@@ -80,31 +76,32 @@ func format_time(t time.Time) string {
 func printable_addr(a net.Addr) string {
 	return strings.Replace(a.String(), ":", "-", -1)
 }
-func ndtp_open(b []byte, n int, nd_s *Nd_session) {
 
-	data := new(bytes.Buffer)
-	data.Write(b[:n])
-	npl := ndtp.Npl{}
-	_ = binary.Read(data, binary.LittleEndian, &npl)
-	// if the prefix is wrong - disconnect.
-	if npl.Signature != ndtp.NPL_PACKET_SIGNATURE {
-		return
-	}
-	nd_s.Event = 0
+// func ndtp_open(b []byte, n int, nd_s *Nd_session) {
 
-	nph := ndtp.Nph{}
-	_ = binary.Read(data, binary.LittleEndian, &nph)
-	if nph.Service_id == ndtp.NPH_SRV_GENERIC_CONTROLS {
-		if nph.TypeNPH == ndtp.NPH_SGC_CONN_REQUEST {
-			auth := ndtp.Authorization{}
-			_ = binary.Read(data, binary.LittleEndian, &auth)
+// 	data := new(bytes.Buffer)
+// 	data.Write(b[:n])
+// 	npl := ndtp.Npl{}
+// 	_ = binary.Read(data, binary.LittleEndian, &npl)
+// 	// if the prefix is wrong - disconnect.
+// 	if npl.Signature != ndtp.NPL_PACKET_SIGNATURE {
+// 		return
+// 	}
+// 	nd_s.Event = 0
 
-			nd_s.Pcount = 1
-			nd_s.Id_bnst = int32(auth.Peer_address)
-		}
-	}
+// 	nph := ndtp.Nph{}
+// 	_ = binary.Read(data, binary.LittleEndian, &nph)
+// 	if nph.Service_id == ndtp.NPH_SRV_GENERIC_CONTROLS {
+// 		if nph.TypeNPH == ndtp.NPH_SGC_CONN_REQUEST {
+// 			auth := ndtp.Authorization{}
+// 			_ = binary.Read(data, binary.LittleEndian, &auth)
 
-}
+// 			nd_s.Pcount = 1
+// 			nd_s.Id_bnst = int32(auth.Peer_address)
+// 		}
+// 	}
+
+// }
 
 // Структура, в которой передаются параметры соединения. Объединено, чтобы
 // не таскать много параметров.
@@ -297,7 +294,7 @@ func from_to_copy(c *ListTo) {
 		packet_n += 1
 		if n > 0 {
 			if (n > 40) && (nd_s.Event < 0) {
-				ndtp_open(b, n, &nd_s)
+				// ndtp_open(b, n, &nd_s)
 				if nd_s.Id_bnst >= 0 {
 					set_bnst(c.id_session, nd_s.Id_bnst)
 					avNd, err := json.Marshal(nd_s)
@@ -420,7 +417,7 @@ func process_connection(local net.Conn, conn_n int64) {
 
 	for i, ser := range tconfig.Server {
 		// Соединяемся к удаленном сокету, куда будем пересылать данные.
-		target := fmt.Sprintf("%s:%d", ser.Name, ser.Port)
+		target := net.JoinHostPort(ser.Name, strconv.Itoa(ser.Port))
 		lt.to[i].con, err = net.Dial("tcp", target)
 		lt.to[i].active = true
 		if err != nil {
@@ -507,7 +504,7 @@ func main() {
 	//Открываем конфиг
 	var err error
 	tconfig, err = tconfig.Open_cfg(fname)
-	go storage.SaveDB(tconfig, writeData) //saveDB()
+	// go storage.SaveDB(tconfig, writeData) //saveDB()
 
 	if err != nil {
 		fmt.Println("Error open config: ", err)
@@ -531,7 +528,7 @@ func main() {
 
 	http.Handle("/", router)
 	portControl := fmt.Sprintf(":%d", tconfig.PortControl)
-	fmt.Printf("Server is listening %d", portControl)
+	fmt.Printf("Server is listening %s", portControl)
 
 	http.ListenAndServe(portControl, nil)
 }
